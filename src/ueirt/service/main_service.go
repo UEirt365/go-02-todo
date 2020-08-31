@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strconv"
 	"ueirt/db"
-	"ueirt/dto"
+	"ueirt/model"
 )
 
 func CreateTodo(context *gin.Context) {
-	var body dto.Todo
+	var body model.Todo
 	error := context.Bind(&body)
 	if error != nil {
 		log.Print("Fail to parse body", error)
@@ -48,7 +48,7 @@ func UpdateTodo(context *gin.Context) {
 		return
 	}
 
-	var body dto.Todo
+	var body model.Todo
 	error := context.Bind(&body)
 	if error != nil {
 		log.Print("Fail to parse body", error)

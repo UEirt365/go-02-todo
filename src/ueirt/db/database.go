@@ -3,7 +3,7 @@ package db
 import (
 	"github.com/go-gorp/gorp"
 	"log"
-	"ueirt/dto"
+	"ueirt/model"
 )
 import "database/sql"
 import _ "github.com/go-sql-driver/mysql"
@@ -21,15 +21,15 @@ func initDb() *gorp.DbMap {
 	return dbMap
 }
 
-func SelectAllTodo() []dto.Todo {
-	var todoList []dto.Todo
+func SelectAllTodo() []model.Todo {
+	var todoList []model.Todo
 	dbMap.Select(&todoList, "select * from todo")
 
 	return todoList
 }
 
-func GetTodoById(id string) (dto.Todo, bool) {
-	var todo dto.Todo
+func GetTodoById(id string) (model.Todo, bool) {
+	var todo model.Todo
 	err := dbMap.SelectOne(&todo, "select * from ueirt.todo where id = ?", id)
 	if err != nil {
 		return todo, false
@@ -38,7 +38,7 @@ func GetTodoById(id string) (dto.Todo, bool) {
 	return todo, true
 }
 
-func InsertNewTodo(todo dto.Todo) int64 {
+func InsertNewTodo(todo model.Todo) int64 {
 	//var todo dto.Todo
 	insert, err := dbMap.Exec("INSERT INTO ueirt.todo (title, content) VALUES (?, ?)", todo.Title, todo.Content)
 	if err != nil {
@@ -49,7 +49,7 @@ func InsertNewTodo(todo dto.Todo) int64 {
 	return id
 }
 
-func UpdateTodo(todo dto.Todo) int64 {
+func UpdateTodo(todo model.Todo) int64 {
 	//var todo dto.Todo
 	_, err := dbMap.Exec("UPDATE ueirt.todo set title = ?, content =? where id=?", todo.Title, todo.Content, todo.Id)
 	if err != nil {
