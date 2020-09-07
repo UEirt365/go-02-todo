@@ -2,13 +2,11 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"ueirt/middleware"
 	"ueirt/service"
 )
 
 func main() {
 	router := gin.Default()
-	router.Use(gin.CustomRecovery(middleware.RecoveryHandler))
 	v1 := router.Group("api/v1")
 	{
 		v1.POST("", service.CreateTodo)
