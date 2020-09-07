@@ -12,7 +12,7 @@ import (
 func CreateTodo(context *gin.Context) {
 	appGin := &model.Gin{C: context}
 
-	var body model.CreateTodoReq
+	var body model.TodoRequest
 	if err := context.Bind(&body); err != nil {
 		appGin.ToErrorResponse(http.StatusBadRequest, "Invalid request body!", err)
 		return
@@ -25,17 +25,36 @@ func CreateTodo(context *gin.Context) {
 		return
 	}
 
-	id := db.InsertNewTodo(body)
+	id, err := db.InsertNewTodo(body)
+	if err != nil {
+		appGin.ResponseFromError(err)
+		return
+	}
+
 	context.JSON(http.StatusCreated, gin.H{"id": id, "message": "Todo item created successfully!"})
 }
 
 func GetAllTodo(context *gin.Context) {
-	todoList := db.SelectAllTodo()
+	todoList, err := db.SelectAllTodo()
+
+	if err != nil {
+		appGin := &model.Gin{C: context}
+		appGin.ResponseFromError(err)
+		return
+	}
+
 	context.JSON(http.StatusOK, todoList)
 }
 
 func GetTodoById(context *gin.Context) {
-	todo := db.GetTodoById(context.Param("id"))
+	todo, err := db.GetTodoById(context.Param("id"))
+
+	if err != nil {
+		appGin := &model.Gin{C: context}
+		appGin.ResponseFromError(err)
+		return
+	}
+
 	context.JSON(http.StatusOK, todo)
 }
 
@@ -50,14 +69,17 @@ func UpdateTodo(context *gin.Context) {
 		return
 	}
 
-	var body model.Todo
-	if err = context.Bind(&body); err != nil {
+	var todoRequest model.TodoRequest
+	if err = context.Bind(&todoRequest); err != nil {
 		appGin.ToErrorResponse(http.StatusBadRequest, "Invalid request body!", err)
 		return
 	}
 
-	body.Id = todoId
-	id := db.UpdateTodo(body)
+	id, err := db.UpdateTodo(todoId, todoRequest)
+	if err != nil {
+		appGin.ResponseFromError(err)
+		return
+	}
 
 	context.JSON(http.StatusOK, gin.H{"id": id, "message": "Todo item updated successfully!"})
 }
@@ -71,7 +93,10 @@ func DeleteTodo(context *gin.Context) {
 		return
 	}
 
-	db.DeleteTodo(todoId)
+	if err = db.DeleteTodo(todoId); err != nil {
+		appGin.ResponseFromError(err)
+		return
+	}
 
 	context.JSON(http.StatusOK, gin.H{"message": "Todo item was deleted!"})
 }

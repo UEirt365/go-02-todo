@@ -1,6 +1,9 @@
 package model
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
 
 type Gin struct {
 	C *gin.Context
@@ -22,4 +25,14 @@ func (g *Gin) ToErrorResponse(httpStatus int, message string, obj interface{}) {
 
 func (g *Gin) ResponseFromApiError(apiError ApiError) {
 	g.C.JSON(apiError.Status, gin.H{"message": apiError.Message, "error": apiError.Err})
+}
+
+func (g *Gin) ResponseFromError(err error) {
+	switch err.(type) {
+	case ApiError:
+		apiError := err.(ApiError)
+		g.ResponseFromApiError(apiError)
+	default:
+		g.C.JSON(http.StatusInternalServerError, gin.H{"message": "Unexpected error", "error": err})
+	}
 }

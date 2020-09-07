@@ -22,67 +22,68 @@ func initDb() *gorp.DbMap {
 	return dbMap
 }
 
-func SelectAllTodo() []model.Todo {
+func SelectAllTodo() ([]model.Todo, error) {
 	var todoList []model.Todo
 
 	if _, err := dbMap.Select(&todoList, "select * from todo"); err != nil {
-		panic(model.ApiError{Status: http.StatusInternalServerError, Message: "Failed to select database", Err: err})
+		return nil, model.ApiError{Status: http.StatusInternalServerError, Message: "Failed to select database", Err: err}
 	}
 
-	return todoList
+	return todoList, nil
 }
 
-func GetTodoById(id string) model.Todo {
+func GetTodoById(id string) (interface{}, error) {
 	var todo model.Todo
 
 	if err := dbMap.SelectOne(&todo, "select * from ueirt.todo where id = ?", id); err != nil {
-		panic(model.ApiError{Status: http.StatusNotFound, Message: "Todo not found", Err: err})
+		return nil, model.ApiError{Status: http.StatusNotFound, Message: "Todo not found", Err: err}
 	}
 
-	return todo
+	return todo, nil
 }
 
-func InsertNewTodo(todo model.CreateTodoReq) int64 {
+func InsertNewTodo(todo model.TodoRequest) (int64, error) {
 	insert, err := dbMap.Exec("INSERT INTO ueirt.todo (title, content) VALUES (?, ?)", todo.Title, todo.Content)
 
 	if err != nil {
-		panic(model.ApiError{Status: http.StatusInternalServerError, Message: "Failed to insert database", Err: err})
+		return 0, model.ApiError{Status: http.StatusInternalServerError, Message: "Failed to insert database", Err: err}
 	}
 
 	id, err := insert.LastInsertId()
 	if err != nil {
-		panic(model.ApiError{Status: http.StatusInternalServerError, Message: "Failed to get LastInsertId", Err: err})
+		return 0, model.ApiError{Status: http.StatusInternalServerError, Message: "Failed to get LastInsertId", Err: err}
 	}
 
-	return id
+	return id, nil
 }
 
-func UpdateTodo(todo model.Todo) int64 {
-	result, err := dbMap.Exec("UPDATE ueirt.todo set title = ?, content =? where id=?", todo.Title, todo.Content, todo.Id)
+func UpdateTodo(todoId int, todo model.TodoRequest) (int64, error) {
+	result, err := dbMap.Exec("UPDATE ueirt.todo set title = ?, content =? where id=?", todo.Title, todo.Content, todoId)
 	if err != nil {
-		panic(model.ApiError{Status: http.StatusInternalServerError, Message: "Failed to update todo to database", Err: err})
+		return 0, model.ApiError{Status: http.StatusInternalServerError, Message: "Failed to update todo to database", Err: err}
 	}
 	rowsAffected, err := result.RowsAffected()
 	if rowsAffected <= 0 {
-		panic(model.ApiError{Status: http.StatusNotFound, Message: "Todo not found.", Err: err})
+		return 0, model.ApiError{Status: http.StatusNotFound, Message: "Todo not found.", Err: err}
 	}
 	if err != nil {
-		panic(model.ApiError{Status: http.StatusInternalServerError, Message: "Failed to get updated todo", Err: err})
+		return 0, model.ApiError{Status: http.StatusInternalServerError, Message: "Failed to get updated todo", Err: err}
 	}
 
-	return int64(todo.Id)
+	return int64(todoId), nil
 }
 
-func DeleteTodo(todoId int) {
+func DeleteTodo(todoId int) error {
 	result, err := dbMap.Exec("DELETE FROM ueirt.todo where id=?", todoId)
 	if err != nil {
-		panic(model.ApiError{Status: http.StatusInternalServerError, Message: "Failed to delete todo", Err: err})
+		return model.ApiError{Status: http.StatusInternalServerError, Message: "Failed to delete todo", Err: err}
 	}
 	rowsAffected, err := result.RowsAffected()
 	if rowsAffected <= 0 {
-		panic(model.ApiError{Status: http.StatusNotFound, Message: "Todo not found.", Err: err})
+		return model.ApiError{Status: http.StatusNotFound, Message: "Todo not found.", Err: err}
 	}
 	if err != nil {
-		panic(model.ApiError{Status: http.StatusInternalServerError, Message: "Failed to get updated todo", Err: err})
+		return model.ApiError{Status: http.StatusInternalServerError, Message: "Failed to get updated todo", Err: err}
 	}
+	return nil
 }
