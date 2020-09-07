@@ -42,7 +42,7 @@ func GetTodoById(id string) model.Todo {
 	return todo
 }
 
-func InsertNewTodo(todo model.Todo) int64 {
+func InsertNewTodo(todo model.CreateTodoReq) int64 {
 	insert, err := dbMap.Exec("INSERT INTO ueirt.todo (title, content) VALUES (?, ?)", todo.Title, todo.Content)
 
 	if err != nil {

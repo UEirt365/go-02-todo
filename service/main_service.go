@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/astaxie/beego/validation"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -11,11 +12,19 @@ import (
 func CreateTodo(context *gin.Context) {
 	appGin := &model.Gin{C: context}
 
-	var body model.Todo
+	var body model.CreateTodoReq
 	if err := context.Bind(&body); err != nil {
 		appGin.ToErrorResponse(http.StatusBadRequest, "Invalid request body!", err)
 		return
 	}
+
+	val := validation.Validation{}
+	ok, _ := val.Valid(&body)
+	if !ok {
+		appGin.ToErrorResponse(http.StatusBadRequest, "Invalid request body.", val.Errors)
+		return
+	}
+
 	id := db.InsertNewTodo(body)
 	context.JSON(http.StatusCreated, gin.H{"id": id, "message": "Todo item created successfully!"})
 }

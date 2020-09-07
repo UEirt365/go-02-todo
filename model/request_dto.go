@@ -5,3 +5,8 @@ type Todo struct {
 	Title   string `db:"title" json:"title"`
 	Content string `db:"content" json:"content"`
 }
+
+type CreateTodoReq struct {
+	Title   string `valid:"Required"`
+	Content string `valid:"Required"`
+}
